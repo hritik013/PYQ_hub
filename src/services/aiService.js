@@ -1,4 +1,4 @@
-const AI_API_KEY = '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';
+const AI_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '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';
 
 // Try multiple models in case one doesn't work
 const AI_SERVICES = [
@@ -15,6 +15,11 @@ const AI_SERVICES = [
 ];
 
 export const sendMessageToAI = async (message, conversationHistory = [], contextMessage = '') => {
+  // Check if API key is available
+  if (!AI_API_KEY || AI_API_KEY === 'your_openrouter_api_key_here') {
+    return '⚠️ **API Key Missing**\n\nTo use the AI Assistant, you need to set up your OpenRouter API key:\n\n1. **Get a free API key** from [OpenRouter.ai](https://openrouter.ai)\n2. **Create a `.env` file** in your project root\n3. **Add your key**: `VITE_OPENROUTER_API_KEY=your_actual_key_here`\n4. **Restart your development server**\n\n💡 **Alternative**: You can also use OpenAI directly by setting `VITE_OPENAI_API_KEY` instead.';
+  }
+
   const systemMessage = contextMessage 
     ? `You are a helpful study assistant for students preparing for exams. You help with PYQs (Previous Year Questions) and provide study guidance. 
 
@@ -96,5 +101,50 @@ Be concise, helpful, and focus on exam preparation strategies.`;
 
   // If all services fail, return a helpful error message with debugging info
   console.error('All AI services failed. Check the console for detailed error messages.');
-  return 'Sorry, I\'m having trouble connecting to the AI service right now. Please check your API key or try again later. You can also click "Test API Connection" to debug the issue.';
+  return '⚠️ **Connection Failed**\n\nAll AI services are currently unavailable. This could be due to:\n\n• **Invalid API key** - Check your OpenRouter API key\n• **Network issues** - Check your internet connection\n• **Service downtime** - Try again in a few minutes\n\n🔧 **Debug Steps**:\n1. Check browser console (F12) for detailed errors\n2. Verify your API key is correct\n3. Test your internet connection\n4. Try refreshing the page';
+};
+
+// Test function to check API connectivity
+export const testAPIConnection = async () => {
+  if (!AI_API_KEY || AI_API_KEY === 'your_openrouter_api_key_here') {
+    return {
+      success: false,
+      message: 'API key not configured. Please set VITE_OPENROUTER_API_KEY in your .env file.'
+    };
+  }
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AI_API_KEY}`,
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'PYQ Study Assistant'
+      },
+      body: JSON.stringify({
+        model: 'mistralai/mistral-small-3.2-24b-instruct:free',
+        messages: [{ role: 'user', content: 'Hello' }],
+        max_tokens: 10
+      })
+    });
+
+    if (response.ok) {
+      return {
+        success: true,
+        message: '✅ API connection successful!'
+      };
+    } else {
+      const errorData = await response.json();
+      return {
+        success: false,
+        message: `❌ API Error: ${errorData.error?.message || 'Unknown error'}`
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: `❌ Network Error: ${error.message}`
+    };
+  }
 }; 
