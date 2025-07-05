@@ -12,7 +12,7 @@ A modern web application that helps students access, analyze, and learn from pre
 
 ### Technical Features
 - **Modern UI/UX**: Beautiful, responsive design with Tailwind CSS
-- **Real-time Feedback**: Google Sheets integration for feedback management
+- **Real-time Feedback**: Google Sheets integration for feeOdback management
 - **PDF Processing**: Advanced PDF extraction and analysis
 - **AI Integration**: Intelligent study recommendations
 - **Database**: Supabase integration for data management

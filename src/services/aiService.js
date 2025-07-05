@@ -1,4 +1,4 @@
-const AI_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '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';
+const AI_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 
 // Try multiple models in case one doesn't work
 const AI_SERVICES = [
@@ -16,8 +16,8 @@ const AI_SERVICES = [
 
 export const sendMessageToAI = async (message, conversationHistory = [], contextMessage = '') => {
   // Check if API key is available
-  if (!AI_API_KEY || AI_API_KEY === 'your_openrouter_api_key_here') {
-    return '⚠️ **API Key Missing**\n\nTo use the AI Assistant, you need to set up your OpenRouter API key:\n\n1. **Get a free API key** from [OpenRouter.ai](https://openrouter.ai)\n2. **Create a `.env` file** in your project root\n3. **Add your key**: `VITE_OPENROUTER_API_KEY=your_actual_key_here`\n4. **Restart your development server**\n\n💡 **Alternative**: You can also use OpenAI directly by setting `VITE_OPENAI_API_KEY` instead.';
+  if (!AI_API_KEY) {
+    return '⚠️ **API Key Missing**\n\nTo use the AI Assistant, you need to set up your OpenRouter API key:\n\n**For Local Development:**\n1. Create a `.env` file in your project root\n2. Add: `VITE_OPENROUTER_API_KEY=your_actual_key_here`\n3. Restart your development server\n\n**For Vercel Deployment:**\n1. Go to your Vercel dashboard\n2. Select your project\n3. Go to Settings → Environment Variables\n4. Add: `VITE_OPENROUTER_API_KEY` with your API key\n5. Redeploy your project\n\n💡 **Get API Key**: [OpenRouter.ai](https://openrouter.ai)';
   }
 
   const systemMessage = contextMessage 
@@ -106,10 +106,10 @@ Be concise, helpful, and focus on exam preparation strategies.`;
 
 // Test function to check API connectivity
 export const testAPIConnection = async () => {
-  if (!AI_API_KEY || AI_API_KEY === 'your_openrouter_api_key_here') {
+  if (!AI_API_KEY) {
     return {
       success: false,
-      message: 'API key not configured. Please set VITE_OPENROUTER_API_KEY in your .env file.'
+      message: 'API key not configured. Please set VITE_OPENROUTER_API_KEY in your environment variables.'
     };
   }
 
