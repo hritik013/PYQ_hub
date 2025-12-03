@@ -130,51 +130,51 @@ const Home = () => {
   return (
     <div className="space-y-12">
       {/* Hero Section */}
-      <div className="text-center space-y-6">
-        <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
+      <div className="text-center space-y-6 px-4 sm:px-0">
+        <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900">
           Your Gateway to
           <span className="text-primary-600"> Academic Success</span>
         </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+        <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
           Access, analyze, and learn from previous year question papers with AI-powered insights. 
           Upload PYQs, browse by subject, and get personalized study recommendations.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/upload" className="btn-primary text-lg px-8 py-3">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+          <Link to="/upload" className="btn-primary text-base sm:text-lg px-6 sm:px-8 py-2 sm:py-3">
             Upload Your First PYQ
           </Link>
-          <Link to="/browse" className="btn-secondary text-lg px-8 py-3">
+          <Link to="/browse" className="btn-secondary text-base sm:text-lg px-6 sm:px-8 py-2 sm:py-3">
             Browse PYQs
           </Link>
         </div>
       </div>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 px-4 sm:px-0">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <div key={index} className="card text-center">
-              <div className="flex justify-center mb-4">
-                <Icon className="h-8 w-8 text-primary-600" />
+              <div className="flex justify-center mb-3 sm:mb-4">
+                <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary-600" />
               </div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
-              <div className="text-gray-600">{stat.label}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">{stat.value}</div>
+              <div className="text-gray-600 text-sm sm:text-base">{stat.label}</div>
             </div>
           );
         })}
       </div>
 
       {/* Features Section */}
-      <div className="space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">What You Can Do</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+      <div className="space-y-6 sm:space-y-8">
+        <div className="text-center px-4 sm:px-0">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">What You Can Do</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
             Our platform provides everything you need to excel in your studies with previous year question papers.
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 px-4 sm:px-0">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
@@ -183,11 +183,11 @@ const Home = () => {
                 to={feature.path}
                 className="card hover:shadow-lg transition-shadow duration-200 group"
               >
-                <div className={`inline-flex p-3 rounded-lg ${feature.color} mb-4 group-hover:scale-110 transition-transform duration-200`}>
-                  <Icon className="h-6 w-6 text-white" />
+                <div className={`inline-flex p-2 sm:p-3 rounded-lg ${feature.color} mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-200`}>
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-gray-600 text-sm sm:text-base">{feature.description}</p>
               </Link>
             );
           })}
@@ -196,11 +196,11 @@ const Home = () => {
 
       {/* CTA Section */}
       <div className="card text-center bg-gradient-to-r from-primary-600 to-primary-700 text-white">
-        <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-        <p className="text-primary-100 mb-6 max-w-2xl mx-auto">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 px-4 sm:px-0">Ready to Get Started?</h2>
+        <p className="text-primary-100 mb-4 sm:mb-6 max-w-2xl mx-auto px-4 sm:px-0 text-sm sm:text-base">
           Join thousands of students who are already using PYQ Hub to improve their exam preparation.
         </p>
-        <Link to="/upload" className="bg-white text-primary-600 hover:bg-gray-100 font-medium py-3 px-8 rounded-lg transition-colors duration-200">
+        <Link to="/upload" className="inline-block bg-white text-primary-600 hover:bg-gray-100 font-medium py-2 sm:py-3 px-6 sm:px-8 rounded-lg transition-colors duration-200 text-sm sm:text-base mx-4 sm:mx-0">
           Start Uploading PYQs
         </Link>
       </div>

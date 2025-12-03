@@ -71,45 +71,45 @@ const FeedbackModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-primary-500 to-secondary-500 p-6 text-white">
+        <div className="bg-gradient-to-r from-primary-500 to-secondary-500 p-4 sm:p-6 text-white flex-shrink-0">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold">Share Your Feedback</h2>
+            <h2 className="text-lg sm:text-xl font-bold">Share Your Feedback</h2>
             <button
               onClick={handleClose}
               disabled={isSubmitting}
-              className="text-white/80 hover:text-white transition-colors"
+              className="text-white/80 hover:text-white transition-colors p-1"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
           </div>
-          <p className="text-white/90 mt-2 text-sm">
+          <p className="text-white/90 mt-2 text-xs sm:text-sm">
             Help us improve PYQ Hub with your suggestions and comments
           </p>
         </div>
 
         {submitted ? (
           /* Success State */
-          <div className="p-8 text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-accent-500 to-primary-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Send className="h-8 w-8 text-white" />
+          <div className="p-6 sm:p-8 text-center flex-1 flex flex-col justify-center">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-accent-500 to-primary-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Send className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Thank You!</h3>
-            <p className="text-gray-600">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Thank You!</h3>
+            <p className="text-gray-600 text-sm sm:text-base">
               Your feedback has been submitted successfully. We appreciate your input!
             </p>
           </div>
         ) : (
           /* Feedback Form */
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6 flex-1 overflow-y-auto">
             {/* Feedback Type Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                 What type of feedback is this?
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {feedbackTypes.map((type) => {
                   const Icon = type.icon;
                   return (
@@ -117,15 +117,15 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                       key={type.id}
                       type="button"
                       onClick={() => setFeedbackType(type.id)}
-                      className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      className={`p-2 sm:p-3 rounded-lg border-2 transition-all duration-200 ${
                         feedbackType === type.id
                           ? 'border-primary-500 bg-primary-50 text-primary-700'
                           : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
                       }`}
                     >
-                      <div className="flex items-center space-x-2">
-                        <Icon className="h-4 w-4" />
-                        <span className="text-sm font-medium">{type.label}</span>
+                      <div className="flex items-center space-x-1 sm:space-x-2">
+                        <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="text-xs sm:text-sm font-medium">{type.label}</span>
                       </div>
                     </button>
                   );
@@ -135,7 +135,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
 
             {/* Name Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                 Your Name (Optional)
               </label>
               <input
@@ -143,29 +143,29 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent text-sm sm:text-base"
               />
             </div>
 
             {/* Rating (for suggestions and comments) */}
             {(feedbackType === 'suggestion' || feedbackType === 'comment') && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                   How would you rate your experience?
                 </label>
-                <div className="flex space-x-2">
+                <div className="flex space-x-1 sm:space-x-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
                       type="button"
                       onClick={() => setRating(star)}
-                      className={`p-2 rounded-lg transition-colors ${
+                      className={`p-1 sm:p-2 rounded-lg transition-colors ${
                         rating >= star
                           ? 'text-secondary-500 bg-secondary-50'
                           : 'text-gray-300 hover:text-secondary-400'
                       }`}
                     >
-                      <Star className="h-6 w-6 fill-current" />
+                      <Star className="h-5 w-5 sm:h-6 sm:w-6 fill-current" />
                     </button>
                   ))}
                 </div>
@@ -174,7 +174,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
 
             {/* Message Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                 Your {feedbackType === 'suggestion' ? 'suggestion' : feedbackType === 'comment' ? 'comment' : feedbackType === 'bug' ? 'bug report' : 'feature request'}
               </label>
               <textarea
@@ -189,34 +189,34 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                     ? 'Describe the issue you encountered...'
                     : 'Describe the feature you would like to see...'
                 }
-                className="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent resize-none"
+                className="w-full h-24 sm:h-32 px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent resize-none text-sm sm:text-base"
                 required
               />
             </div>
 
             {/* Submit Button */}
-            <div className="flex space-x-3">
+            <div className="flex space-x-2 sm:space-x-3 pt-2">
               <button
                 type="button"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex-1 px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !message.trim()}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="flex-1 px-3 sm:px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 sm:space-x-2 text-sm sm:text-base"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     <span>Submitting...</span>
                   </>
                 ) : (
                   <>
-                    <Send className="h-4 w-4" />
+                    <Send className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span>Submit Feedback</span>
                   </>
                 )}

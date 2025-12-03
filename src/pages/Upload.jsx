@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload as UploadIcon, FileText, X, CheckCircle, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
-import { savePYQToSupabase } from '../services/supabaseService';
+import { savePYQToSupabase, fetchSubjects } from '../services/supabaseService';
 
 const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dgu8cjthr/auto/upload';
 const UPLOAD_PRESET = 'pyq_unsigned';
@@ -22,6 +22,8 @@ const Upload = () => {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [formData, setFormData] = useState({
     subject: '',
     semester: '',
@@ -29,6 +31,8 @@ const Upload = () => {
     examtype: '',
     description: '',
     course: '',
+    // upload_type: 'pyq' means Previous Year Question, 'notes' means notes/handwritten notes etc.
+    upload_type: 'pyq',
   });
 
   const onDrop = useCallback((acceptedFiles) => {
@@ -68,6 +72,28 @@ const Upload = () => {
     }));
   };
 
+  // Load subjects whenever course and semester are selected
+  useEffect(() => {
+    const loadSubjects = async () => {
+      // Only load when both course and semester are chosen
+      if (!formData.course || !formData.semester) {
+        setSubjects([]);
+        setSelectedSubjectId('');
+        return;
+      }
+
+      try {
+        const data = await fetchSubjects(formData.course, formData.semester);
+        setSubjects(data || []);
+        setSelectedSubjectId('');
+      } catch (error) {
+        toast.error('Failed to load subjects');
+      }
+    };
+
+    loadSubjects();
+  }, [formData.course, formData.semester]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -76,14 +102,23 @@ const Upload = () => {
       return;
     }
 
-    if (!formData.subject || !formData.semester || !formData.year || !formData.course) {
+    // Basic required fields for both PYQs and Notes
+    if (!selectedSubjectId || !formData.semester || !formData.course) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // For PYQs, year is required; for Notes, it's optional and hidden
+    if (formData.upload_type === 'pyq' && !formData.year) {
+      toast.error('Please provide the year for the PYQ');
       return;
     }
 
     setUploading(true);
     try {
       const uploaded = [];
+      const selectedSubject = subjects.find((s) => s.id === selectedSubjectId) || null;
+
       for (const fileObj of files) {
         const result = await uploadToCloudinary(fileObj.file);
         uploaded.push({
@@ -94,19 +129,24 @@ const Upload = () => {
         });
         // Save metadata to Supabase for each file
         await savePYQToSupabase({
-          subject: formData.subject,
+          subject_id: selectedSubjectId,
+          // Keep a human readable subject text as well for now (optional)
+          subject: selectedSubject ? selectedSubject.name : formData.subject,
           semester: formData.semester,
-          year: parseInt(formData.year),
-          examtype: formData.examtype,
+          // Only save year and examtype for PYQs; leave null for Notes
+          year: formData.upload_type === 'pyq' ? parseInt(formData.year) : null,
+          examtype: formData.upload_type === 'pyq' ? formData.examtype : null,
           description: formData.description,
           course: formData.course,
+          // Distinguish between PYQs and Notes in the database
+          content_type: formData.upload_type || 'pyq',
           file_url: result.secure_url,
           file_name: fileObj.file.name,
           file_size: fileObj.file.size,
         });
       }
       setUploadedFiles(prev => [...prev, ...uploaded]);
-      toast.success('Files uploaded to Cloudinary & saved to Supabase!');
+      toast.success('Files uploaded & saved!');
       setFiles([]);
       setFormData({
         subject: '',
@@ -115,7 +155,10 @@ const Upload = () => {
         examtype: '',
         description: '',
         course: '',
+        upload_type: 'pyq',
       });
+      setSelectedSubjectId('');
+      setSubjects([]);
     } catch (error) {
       toast.error('Upload failed. Please try again.');
     } finally {
@@ -129,8 +172,10 @@ const Upload = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Upload Previous Year Question Papers</h1>
-        <p className="text-gray-600">Share your question papers with the community and help fellow students</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Upload PYQ and Notes</h1>
+        <p className="text-gray-600">
+          Share your previous year question papers or study notes with the community and help fellow students
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -217,9 +262,71 @@ const Upload = () => {
         {/* Form Section */}
         <div className="space-y-6">
           <div className="card">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Question Paper Details</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Details</h2>
             
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Upload type selector: PYQ vs Notes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  What are you uploading? <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, upload_type: 'pyq' }))}
+                    className={`flex items-start gap-2 p-3 rounded-lg border text-left transition-all duration-150 ${
+                      formData.upload_type === 'pyq'
+                        ? 'border-primary-500 bg-primary-50 shadow-sm'
+                        : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="mt-1">
+                      <input
+                        type="radio"
+                        name="upload_type"
+                        value="pyq"
+                        checked={formData.upload_type === 'pyq'}
+                        onChange={handleInputChange}
+                        className="text-primary-600 focus:ring-primary-500"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Previous Year Question (PYQ)</p>
+                      <p className="text-xs text-gray-600">
+                        Official question papers from previous exams.
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, upload_type: 'notes' }))}
+                    className={`flex items-start gap-2 p-3 rounded-lg border text-left transition-all duration-150 ${
+                      formData.upload_type === 'notes'
+                        ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                        : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="mt-1">
+                      <input
+                        type="radio"
+                        name="upload_type"
+                        value="notes"
+                        checked={formData.upload_type === 'notes'}
+                        onChange={handleInputChange}
+                        className="text-emerald-600 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Notes</p>
+                      <p className="text-xs text-gray-600">
+                        Handwritten notes, summaries, or study material.
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label htmlFor="course" className="block text-sm font-medium text-gray-700 mb-1">Course <span className="text-red-500">*</span></label>
                 <select
@@ -238,17 +345,29 @@ const Upload = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Subject * <span className="text-red-500">*</span>
+                  Subject <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   name="subject"
-                  value={formData.subject}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Data Structures and Algorithms"
+                  value={selectedSubjectId}
+                  onChange={(e) => setSelectedSubjectId(e.target.value)}
                   className="input-field"
                   required
-                />
+                  disabled={!formData.course || !formData.semester || subjects.length === 0}
+                >
+                  <option value="">
+                    {(!formData.course || !formData.semester)
+                      ? 'Select course and semester first'
+                      : subjects.length === 0
+                        ? 'No subjects available'
+                        : 'Select Subject'}
+                  </option>
+                  {subjects.map((subject) => (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -269,39 +388,43 @@ const Upload = () => {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Year * <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="year"
-                  value={formData.year}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 2023"
-                  min="2000"
-                  max="2030"
-                  className="input-field"
-                  required
-                />
-              </div>
+              {formData.upload_type === 'pyq' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Year * <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="year"
+                      value={formData.year}
+                      onChange={handleInputChange}
+                      placeholder="e.g., 2023"
+                      min="2000"
+                      max="2030"
+                      className="input-field"
+                      required={formData.upload_type === 'pyq'}
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Exam Type
-                </label>
-                <select
-                  name="examtype"
-                  value={formData.examtype}
-                  onChange={handleInputChange}
-                  className="input-field"
-                >
-                  <option value="">Select Exam Type</option>
-                  {examTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Exam Type
+                    </label>
+                    <select
+                      name="examtype"
+                      value={formData.examtype}
+                      onChange={handleInputChange}
+                      className="input-field"
+                    >
+                      <option value="">Select Exam Type</option>
+                      {examTypes.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -330,7 +453,9 @@ const Upload = () => {
                 ) : (
                   <>
                     <UploadIcon className="h-4 w-4" />
-                    <span>Upload PYQ</span>
+                    <span>
+                      {formData.upload_type === 'notes' ? 'Upload Notes' : 'Upload PYQ'}
+                    </span>
                   </>
                 )}
               </button>

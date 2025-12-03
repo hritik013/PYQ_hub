@@ -23,6 +23,7 @@ export const sendMessageToAI = async (message, conversationHistory = [], context
   const systemMessage = contextMessage 
     ? `You are a helpful study assistant for students preparing for exams. You help with PYQs (Previous Year Questions) and provide study guidance. 
 
+
 IMPORTANT FORMATTING RULES:
 - Use clear headings with **bold** text
 - Use bullet points (•) for lists
@@ -88,14 +89,54 @@ Be concise, helpful, and focus on exam preparation strategies.`;
       if (response.ok) {
         const data = await response.json();
         console.log(`${service.name} worked!`);
-        return data.choices[0]?.message?.content || 'Sorry, I couldn\'t generate a response.';
+        console.log('Response data:', data);
+        console.log('Response structure:', {
+          hasData: !!data,
+          hasChoices: !!(data && data.choices),
+          choicesLength: data?.choices?.length,
+          firstChoice: data?.choices?.[0],
+          hasMessage: !!(data?.choices?.[0]?.message),
+          hasContent: !!(data?.choices?.[0]?.message?.content),
+          alternativeContent: data?.content,
+          alternativeText: data?.text
+        });
+        
+        // Validate response structure
+        if (data && data.choices && Array.isArray(data.choices) && data.choices.length > 0) {
+          const choice = data.choices[0];
+          if (choice && choice.message && choice.message.content) {
+            return choice.message.content;
+          } else {
+            console.error('Invalid choice structure:', choice);
+            throw new Error('Invalid response structure: missing message content');
+          }
+        } else if (data && data.content) {
+          // Fallback for different response format
+          console.log('Using fallback response format');
+          return data.content;
+        } else if (data && data.text) {
+          // Another fallback format
+          console.log('Using text fallback response format');
+          return data.text;
+        } else {
+          console.error('Invalid response structure:', data);
+          throw new Error('Invalid response structure: missing choices array or content');
+        }
       } else {
         console.log(`${service.name} failed with status: ${response.status}`);
         const errorText = await response.text();
         console.log(`Error details: ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
     } catch (error) {
       console.error(`${service.name} error:`, error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        service: service.name,
+        url: service.url,
+        model: service.model
+      });
     }
   }
 

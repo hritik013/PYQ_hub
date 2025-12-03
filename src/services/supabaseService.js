@@ -14,7 +14,31 @@ export async function savePYQToSupabase(pyqData) {
 
 // Fetch all PYQs from Supabase
 export async function fetchPYQsFromSupabase() {
-  const { data, error } = await supabase.from('pyqs').select('*').order('created_at', { ascending: false });
+  // Include related subject data via foreign key (subjects table)
+  const { data, error } = await supabase
+    .from('pyqs')
+    .select('*, subjects(id, name, course, semester)')
+    .order('created_at', { ascending: false });
   if (error) throw error;
   return data;
-} 
+}
+
+// Fetch subjects for a given course + semester
+export async function fetchSubjects(course, semester) {
+  const query = supabase
+    .from('subjects')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (course) {
+    query.eq('course', course);
+  }
+
+  if (semester) {
+    query.eq('semester', semester);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+}

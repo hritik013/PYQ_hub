@@ -10,8 +10,8 @@ const Navbar = () => {
 
   const navItems = [
     { path: '/', label: 'Home', icon: BookOpen },
-    { path: '/upload', label: 'Upload PYQ', icon: Upload },
-    { path: '/browse', label: 'Browse PYQs', icon: Search },
+    { path: '/upload', label: 'Upload PYQ and Notes', icon: Upload },
+    { path: '/browse', label: 'Browse PYQ and Notes', icon: Search },
     { path: '/ai-assistant', label: 'AI Assistant', icon: 'bot' },
   ];
 

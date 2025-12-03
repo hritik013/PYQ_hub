@@ -6,24 +6,37 @@ const FeedbackDisplay = () => {
   const [feedback, setFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const loadFeedback = async () => {
       try {
         setLoading(true);
-        const data = await fetchFeedback();
-        setFeedback(data);
         setError(null);
+        console.log(`Starting to load feedback (attempt ${retryCount + 1})...`);
+        
+        const data = await fetchFeedback();
+        console.log('Feedback loaded successfully:', data);
+        setFeedback(data);
+        setRetryCount(0); // Reset retry count on success
       } catch (err) {
         console.error('Failed to load feedback:', err);
-        setError('Failed to load feedback');
+        setError(`Failed to load feedback: ${err.message}`);
+        
+        // Auto-retry on mobile devices (up to 2 retries)
+        if (retryCount < 2 && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+          console.log(`Retrying feedback load in 2 seconds... (attempt ${retryCount + 1})`);
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+          }, 2000);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     loadFeedback();
-  }, []);
+  }, [retryCount]);
 
   const getFeedbackIcon = (type) => {
     switch (type) {
@@ -78,7 +91,7 @@ const FeedbackDisplay = () => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`h-4 w-4 ${
+        className={`h-3 w-3 sm:h-4 sm:w-4 ${
           i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
         }`}
       />
@@ -98,7 +111,16 @@ const FeedbackDisplay = () => {
     return (
       <div className="text-center py-12">
         <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-        <p className="text-gray-600">{error}</p>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <button 
+          onClick={() => {
+            setRetryCount(0);
+            setError(null);
+          }}
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -115,50 +137,50 @@ const FeedbackDisplay = () => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">What Our Users Say</h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">What Our Users Say</h2>
+        <p className="text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
           Real feedback from students using PYQ Hub to improve their exam preparation.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-4 sm:px-0">
         {feedback.map((item, index) => (
-          <div key={index} className="card hover:shadow-lg transition-shadow duration-200">
+          <div key={index} className="card hover:shadow-lg transition-shadow duration-200 overflow-hidden">
             {/* Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-2">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="flex items-center space-x-1 sm:space-x-2 min-w-0 flex-1">
                 {getFeedbackIcon(item.type)}
-                <span className="text-sm font-medium text-gray-600">
+                <span className="text-xs sm:text-sm font-medium text-gray-600 truncate">
                   {getFeedbackTypeLabel(item.type)}
                 </span>
               </div>
-              <div className="flex items-center space-x-1 text-gray-400">
-                <Clock className="h-4 w-4" />
+              <div className="flex items-center space-x-1 text-gray-400 flex-shrink-0 ml-2">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="text-xs">{formatDate(item.timestamp)}</span>
               </div>
             </div>
 
             {/* Name */}
             {item.name && (
-              <div className="flex items-center space-x-2 mb-3">
-                <User className="h-4 w-4 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">{item.name}</span>
+              <div className="flex items-center space-x-1 sm:space-x-2 mb-2 sm:mb-3">
+                <User className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">{item.name}</span>
               </div>
             )}
 
             {/* Rating */}
             {item.rating > 0 && (
-              <div className="flex items-center space-x-1 mb-3">
+              <div className="flex items-center space-x-1 mb-2 sm:mb-3">
                 {renderStars(item.rating)}
-                <span className="text-sm text-gray-600 ml-2">({item.rating}/5)</span>
+                <span className="text-xs sm:text-sm text-gray-600 ml-1 sm:ml-2">({item.rating}/5)</span>
               </div>
             )}
 
             {/* Message */}
-            <div className="mb-4">
-              <p className="text-gray-700 leading-relaxed">
-                {item.message.length > 150 
-                  ? `${item.message.substring(0, 150)}...` 
+            <div className="mb-3 sm:mb-4">
+              <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                {item.message.length > 120 
+                  ? `${item.message.substring(0, 120)}...` 
                   : item.message
                 }
               </p>
@@ -166,21 +188,21 @@ const FeedbackDisplay = () => {
 
             {/* Footer */}
             <div className="flex items-center justify-between text-xs text-gray-500">
-              <span className="capitalize">{item.type}</span>
-              {item.name && <span>By {item.name}</span>}
+              <span className="capitalize truncate">{item.type}</span>
+              {item.name && <span className="truncate ml-2">By {item.name}</span>}
             </div>
           </div>
         ))}
       </div>
 
       {/* View All Feedback Link */}
-      <div className="text-center pt-6">
+      <div className="text-center pt-4 sm:pt-6">
         <button 
           onClick={() => {
             // You can add a modal or navigate to a feedback page here
             alert('This would show all feedback in a detailed view');
           }}
-          className="text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200"
+          className="text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200 text-sm sm:text-base"
         >
           View All Feedback →
         </button>

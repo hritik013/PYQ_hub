@@ -65,7 +65,33 @@ export const fetchFeedback = async () => {
     const url = `${GOOGLE_APPS_SCRIPT_URL}?${params.toString()}`;
     console.log('Requesting URL:', url);
     
-    // Use JSONP approach for Google Apps Script
+    // Try multiple approaches for better mobile compatibility
+    try {
+      // First, try a direct fetch with CORS headers
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Feedback data received via fetch:', data);
+        
+        if (data.success) {
+          return data.feedback || [];
+        } else {
+          throw new Error(data.error || 'Failed to fetch feedback');
+        }
+      }
+    } catch (fetchError) {
+      console.log('Fetch approach failed, trying JSONP:', fetchError);
+    }
+    
+    // Fallback to JSONP approach
     return new Promise((resolve, reject) => {
       // Create a script tag to make JSONP request
       const script = document.createElement('script');
@@ -73,44 +99,70 @@ export const fetchFeedback = async () => {
       
       // Create global callback function
       window[callbackName] = (data) => {
-        console.log('Feedback data received:', data);
+        console.log('Feedback data received via JSONP:', data);
         
         // Clean up
-        document.head.removeChild(script);
+        try {
+          document.head.removeChild(script);
+        } catch (e) {
+          console.log('Script cleanup error:', e);
+        }
         delete window[callbackName];
         
-        if (data.success) {
+        if (data && data.success) {
           resolve(data.feedback || []);
         } else {
-          reject(new Error(data.error || 'Failed to fetch feedback'));
+          reject(new Error(data?.error || 'Failed to fetch feedback'));
         }
       };
       
       // Set up error handling
       script.onerror = () => {
-        document.head.removeChild(script);
+        console.log('Script onerror triggered');
+        try {
+          document.head.removeChild(script);
+        } catch (e) {
+          console.log('Script cleanup error:', e);
+        }
         delete window[callbackName];
-        reject(new Error('Failed to load feedback'));
+        reject(new Error('Failed to load feedback script'));
       };
       
       // Set timeout
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         if (window[callbackName]) {
-          document.head.removeChild(script);
+          console.log('JSONP request timed out');
+          try {
+            document.head.removeChild(script);
+          } catch (e) {
+            console.log('Script cleanup error:', e);
+          }
           delete window[callbackName];
           reject(new Error('Request timeout'));
         }
-      }, 10000);
+      }, 15000); // Increased timeout for mobile
+      
+      // Update callback to clear timeout
+      const originalCallback = window[callbackName];
+      window[callbackName] = (data) => {
+        clearTimeout(timeoutId);
+        originalCallback(data);
+      };
       
       // Make the request
       script.src = `${url}&callback=${callbackName}`;
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      
+      // Add to head
       document.head.appendChild(script);
     });
     
   } catch (error) {
     console.error('Error fetching feedback:', error);
     
-    // Return sample data for testing if the script isn't updated yet
+    // Return sample data for testing if all approaches fail
+    console.log('Returning sample feedback data');
     return [
       {
         timestamp: new Date().toISOString(),

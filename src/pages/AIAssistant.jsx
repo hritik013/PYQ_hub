@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { User, Send, FileText } from 'lucide-react';
-import Spline from '@splinetool/react-spline';
 import { sendMessageToAI } from '../services/aiService';
 import { extractQuestionsFromPDF, extractQuestionsFromImage } from '../services/pdfExtractionService';
 
@@ -172,9 +171,7 @@ Ask me any specific questions about ${pyqData.subject} and I'll help you prepare
   return (
     <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 items-stretch">
       {/* Spline 3D Slime Section */}
-      <div className="hidden md:flex w-full max-w-sm aspect-[16/9] rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white items-center justify-center">
-        <Spline scene="https://prod.spline.design/5NWcOhOhiu4pdNXP/scene.splinecode" />
-      </div>
+      
       {/* Chat Section */}
       <div className="flex-1 space-y-8">
         <div className="text-center">
