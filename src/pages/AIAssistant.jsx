@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { User, Send, FileText } from 'lucide-react';
+import Spline from '@splinetool/react-spline';
 import { sendMessageToAI } from '../services/aiService';
 import { extractQuestionsFromPDF, extractQuestionsFromImage } from '../services/pdfExtractionService';
 
@@ -169,122 +170,129 @@ Ask me any specific questions about ${pyqData.subject} and I'll help you prepare
 
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">AI Study Assistant</h1>
-        {pyqData && (
-          <div className="mb-4 p-4 bg-primary-50 border border-primary-200 rounded-lg">
-            <div className="flex items-center justify-center space-x-2 mb-2">
-              <FileText className="h-5 w-5 text-primary-600" />
-              <span className="font-semibold text-primary-800">Studying PYQ</span>
+    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 items-stretch">
+      {/* Spline 3D Slime Section */}
+      <div className="hidden md:flex w-full max-w-sm aspect-[16/9] rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white items-center justify-center">
+        <Spline scene="https://prod.spline.design/5NWcOhOhiu4pdNXP/scene.splinecode" />
+      </div>
+      {/* Chat Section */}
+      <div className="flex-1 space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">AI Study Assistant</h1>
+          {pyqData && (
+            <div className="mb-4 p-4 bg-primary-50 border border-primary-200 rounded-lg">
+              <div className="flex items-center justify-center space-x-2 mb-2">
+                <FileText className="h-5 w-5 text-primary-600" />
+                <span className="font-semibold text-primary-800">Studying PYQ</span>
+              </div>
+              <p className="text-sm text-primary-700">
+                {pyqData.subject} • {pyqData.semester} • {pyqData.year}
+              </p>
             </div>
-            <p className="text-sm text-primary-700">
-              {pyqData.subject} • {pyqData.semester} • {pyqData.year}
-            </p>
+          )}
+          <p className="text-gray-600">Ask what to study for any subject or exam. Get smart suggestions based on PYQs!</p>
+        </div>
+
+        {/* Extracted PDF Text Section */}
+        {(showExtractedText || extracting) && (
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Extracted Questions</h2>
+              {extractedTextDisplay && (
+                <button
+                  onClick={() => setShowExtractedText(!showExtractedText)}
+                  className="text-sm text-primary-600 hover:text-primary-800"
+                >
+                  {showExtractedText ? 'Hide' : 'Show'} Questions
+                </button>
+              )}
+            </div>
+            {extracting ? (
+              <div className="bg-gray-50 p-8 rounded-lg text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Extracting text from PDF using OCR...</p>
+                {extractionProgress && (
+                  <p className="text-sm text-primary-600 mt-2">{extractionProgress}</p>
+                )}
+                <p className="text-sm text-gray-500 mt-2">OCR processing may take 1-2 minutes for scanned documents</p>
+              </div>
+            ) : extractedTextDisplay ? (
+              <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
+                  {extractedTextDisplay}
+                </pre>
+              </div>
+            ) : null}
           </div>
         )}
-        <p className="text-gray-600">Ask what to study for any subject or exam. Get smart suggestions based on PYQs!</p>
-      </div>
-
-      {/* Extracted PDF Text Section */}
-      {(showExtractedText || extracting) && (
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Extracted Questions</h2>
-            {extractedTextDisplay && (
-              <button
-                onClick={() => setShowExtractedText(!showExtractedText)}
-                className="text-sm text-primary-600 hover:text-primary-800"
-              >
-                {showExtractedText ? 'Hide' : 'Show'} Questions
-              </button>
-            )}
-          </div>
-          {extracting ? (
-            <div className="bg-gray-50 p-8 rounded-lg text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Extracting text from PDF using OCR...</p>
-              {extractionProgress && (
-                <p className="text-sm text-primary-600 mt-2">{extractionProgress}</p>
-              )}
-              <p className="text-sm text-gray-500 mt-2">OCR processing may take 1-2 minutes for scanned documents</p>
-            </div>
-          ) : extractedTextDisplay ? (
-            <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
-              <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-                {extractedTextDisplay}
-              </pre>
-            </div>
-          ) : null}
-        </div>
-      )}
-      <div className="card h-[500px] flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto space-y-4 p-4 bg-gray-50">
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`flex ${msg.sender === 'ai' ? 'justify-start' : 'justify-end'}`}>
-              <div className={`flex items-end space-x-2 ${msg.sender === 'ai' ? '' : 'flex-row-reverse'}`}>
-                {msg.sender === 'ai' ? (
-                  <img src="/bot.png" alt="AI Assistant" className="h-6 w-6 object-cover" />
-                ) : (
-                  <User className="h-6 w-6 text-gray-400" />
-                )}
-                <div className={`rounded-lg px-4 py-2 ${msg.sender === 'ai' ? 'bg-primary-100 text-gray-900 max-w-md' : 'bg-primary-600 text-white max-w-xs'}`}>
+        <div className="card h-[500px] flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto space-y-4 p-4 bg-gray-50">
+            {messages.map((msg, idx) => (
+              <div key={idx} className={`flex ${msg.sender === 'ai' ? 'justify-start' : 'justify-end'}`}>
+                <div className={`flex items-end space-x-2 ${msg.sender === 'ai' ? '' : 'flex-row-reverse'}`}>
                   {msg.sender === 'ai' ? (
-                    <div dangerouslySetInnerHTML={{ __html: formatAIResponse(msg.text) }} />
+                    <img src="/bot.png" alt="AI Assistant" className="h-6 w-6 object-cover" />
                   ) : (
-                    msg.text
+                    <User className="h-6 w-6 text-gray-400" />
                   )}
-                </div>
-              </div>
-            </div>
-          ))}
-          {loading && (
-            <div className="flex justify-start">
-              <div className="flex items-end space-x-2">
-                <img src="/bot.png" alt="AI Assistant" className="h-6 w-6 object-cover" />
-                <div className="bg-primary-100 text-gray-900 rounded-lg px-4 py-2">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className={`rounded-lg px-4 py-2 ${msg.sender === 'ai' ? 'bg-primary-100 text-gray-900 max-w-md' : 'bg-primary-600 text-white max-w-xs'}`}>
+                    {msg.sender === 'ai' ? (
+                      <div dangerouslySetInnerHTML={{ __html: formatAIResponse(msg.text) }} />
+                    ) : (
+                      msg.text
+                    )}
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-          {extracting && (
-            <div className="flex justify-start">
-              <div className="flex items-end space-x-2">
-                <img src="/bot.png" alt="AI Assistant" className="h-6 w-6 object-cover" />
-                <div className="bg-primary-100 text-gray-900 rounded-lg px-4 py-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                    <span className="text-sm">Extracting questions from PDF...</span>
+            ))}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="flex items-end space-x-2">
+                  <img src="/bot.png" alt="AI Assistant" className="h-6 w-6 object-cover" />
+                  <div className="bg-primary-100 text-gray-900 rounded-lg px-4 py-2">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+            )}
+            {extracting && (
+              <div className="flex justify-start">
+                <div className="flex items-end space-x-2">
+                  <img src="/bot.png" alt="AI Assistant" className="h-6 w-6 object-cover" />
+                  <div className="bg-primary-100 text-gray-900 rounded-lg px-4 py-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                      <span className="text-sm">Extracting questions from PDF...</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          <form onSubmit={handleSend} className="flex items-center border-t border-gray-200 p-3 bg-white">
+            <input
+              type="text"
+              className="input-field flex-1 mr-2"
+              placeholder="Ask about a subject or exam..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              className="btn-primary flex items-center space-x-2"
+              disabled={loading || !input.trim()}
+            >
+              <Send className="h-4 w-4" />
+              <span>Send</span>
+            </button>
+          </form>
         </div>
-        <form onSubmit={handleSend} className="flex items-center border-t border-gray-200 p-3 bg-white">
-          <input
-            type="text"
-            className="input-field flex-1 mr-2"
-            placeholder="Ask about a subject or exam..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={loading}
-          />
-          <button
-            type="submit"
-            className="btn-primary flex items-center space-x-2"
-            disabled={loading || !input.trim()}
-          >
-            <Send className="h-4 w-4" />
-            <span>Send</span>
-          </button>
-        </form>
       </div>
     </div>
   );
